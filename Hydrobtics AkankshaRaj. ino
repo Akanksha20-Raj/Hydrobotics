@@ -1,0 +1,70 @@
+#include <DHT.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define DHT11_PIN 26
+#define SENSOR_PIN 32
+
+DHT dht11(DHT11_PIN,DHT11);
+OneWire oneWire(SENSOR_PIN);
+DallasTemperature DS18B20(&oneWire);
+
+
+
+#include "thingProperties.h"
+int ldr_reading=0;
+
+void setup() {
+  
+  Serial.begin(9600);
+  
+  delay(1500); 
+
+  
+  initProperties();
+
+  dht11.begin();
+  DS18B20.begin();
+
+  pinMode(12,OUTPUT);
+  pinMode(14,OUTPUT);
+  pinMode(34,INPUT);
+
+ 
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+ 
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+}
+
+void loop() {
+  ArduinoCloud.update();
+
+  temperature_sensor = dht11.readTemperature();
+  humidity_sensor = dht11.readHumidity();
+
+  DS18B20.requestTemperatures();
+  water_temperature = DS18B20.getTempCByIndex(0);
+  
+  ldr_reading=analogRead(34);
+  if(ldr_reading>800)
+  {
+    digitalWrite(14,0);
+  }
+  
+  else
+  {
+    digitalWrite(14,1);
+  }
+}
+
+void onWaterpumpChange()  {
+   if(waterpump)
+   {
+     digitalWrite(12,0);
+   }
+  else
+   {
+     digitalWrite(12,1);
+   }
+}
